@@ -1,6 +1,7 @@
 package fr.birdia.cacher.endpoint.rest.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -11,11 +12,13 @@ import fr.birdia.cacher.conf.FacadeIT;
 import fr.birdia.cacher.file.bucket.BucketComponent;
 import fr.birdia.cacher.hash.SHA256;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.server.ResponseStatusException;
 
 class CacherControllerIT extends FacadeIT {
 
@@ -26,7 +29,13 @@ class CacherControllerIT extends FacadeIT {
   @MockBean BucketComponent bucketComponent;
 
   @Test
-  void miss() throws Exception {
+  void unauthorized() {
+    assertThrows(
+        ResponseStatusException.class, () -> subject.getWithCache("dummy", "invalid-api-key"));
+  }
+
+  @Test
+  void miss() throws MalformedURLException {
     var encodedUrl =
         "https%3A%2F%2Fimages.unsplash.com%2Fphoto-1779896412092-4cb69cf4ccad%3Fq%3D80%26w%3D3000%26auto%3Dformat%26fit%3Dcrop%26ixlib%3Drb-4.1.0%26ixid%3DM3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%253D%253D";
     var decodedUrl =
@@ -39,7 +48,7 @@ class CacherControllerIT extends FacadeIT {
         .thenReturn(
             URI.create("https://example.com/presigned?param1=3&param2=4%20param3=5").toURL());
 
-    var response = subject.getWithCache(encodedUrl);
+    var response = subject.getWithCache(encodedUrl, "test-api-key");
 
     verify(bucketComponent, times(1)).upload(any(File.class), eq(bucketKey));
     assertEquals("https://example.com/presigned?param1=3&param2=4%20param3=5", response);
