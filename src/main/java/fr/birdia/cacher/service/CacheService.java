@@ -3,6 +3,7 @@ package fr.birdia.cacher.service;
 import static java.net.http.HttpClient.newHttpClient;
 
 import fr.birdia.cacher.file.bucket.BucketComponent;
+import fr.birdia.cacher.hash.SHA256;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
@@ -20,12 +21,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class CacheService {
   private final BucketComponent bucketComponent;
+  private final SHA256 SHA256;
   private final Duration DOWNLOAD_DURATION = Duration.ofMinutes(5);
 
   private final HttpClient httpClient = newHttpClient();
 
   public URL getWithCache(URL url) {
-    var bucketKey = url.toString(); // TODO: might not correctly handle special char
+    var bucketKey = SHA256.apply(url.toString());
     try {
       var cachedFile = bucketComponent.download(bucketKey);
       log.info("isCachedFile null: " + (cachedFile == null)); // TODO: clean

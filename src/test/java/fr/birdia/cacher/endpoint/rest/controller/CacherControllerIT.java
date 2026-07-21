@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import fr.birdia.cacher.conf.FacadeIT;
 import fr.birdia.cacher.file.bucket.BucketComponent;
+import fr.birdia.cacher.hash.SHA256;
 import java.io.File;
 import java.net.URI;
 import java.time.Duration;
@@ -20,20 +21,23 @@ class CacherControllerIT extends FacadeIT {
 
   @Autowired CacherController subject;
 
+  @Autowired SHA256 SHA256;
+
   @MockBean BucketComponent bucketComponent;
 
   @Test
   void miss() throws Exception {
     var url =
         "https://images.unsplash.com/photo-1779896412092-4cb69cf4ccad?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-    when(bucketComponent.download(url)).thenThrow(new RuntimeException("cache miss"));
-    when(bucketComponent.presign(eq(url), any(Duration.class)))
+    var bucketKey = SHA256.apply(url);
+    when(bucketComponent.download(bucketKey)).thenThrow(new RuntimeException("cache miss"));
+    when(bucketComponent.presign(eq(bucketKey), any(Duration.class)))
         .thenReturn(
             URI.create("https://example.com/presigned?param1=3&param2=4%20param3=5").toURL());
 
     var response = subject.getWithCache(url);
 
-    verify(bucketComponent, times(1)).upload(any(File.class), eq(url));
+    verify(bucketComponent, times(1)).upload(any(File.class), eq(bucketKey));
     assertEquals("https://example.com/presigned?param1=3&param2=4%20param3=5", response);
   }
 }
