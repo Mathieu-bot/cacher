@@ -18,7 +18,7 @@ public class CacherController {
   public String getWithCache(@RequestParam String url) {
     try {
       URL cachedUrl = cacheService.getWithCache(new URL(url));
-      return cachedUrl.toString(); // TODO: test
+      return cachedUrl.toString();
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
