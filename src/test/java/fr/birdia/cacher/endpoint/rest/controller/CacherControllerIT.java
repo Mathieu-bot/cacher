@@ -43,8 +43,8 @@ class CacherControllerIT extends FacadeIT {
     var bucketKey = SHA256.apply(decodedUrl);
     assertEquals("8547b3662d07fb7867a11c2c89672a664fd6e4ffb370dee9f60e0e65eeebde09", bucketKey);
 
-    when(bucketComponent.download(bucketKey)).thenThrow(new RuntimeException("cache miss"));
     when(bucketComponent.presign(eq(bucketKey), any(Duration.class)))
+        .thenThrow(new RuntimeException("cache miss"))
         .thenReturn(
             URI.create("https://example.com/presigned?param1=3&param2=4%20param3=5").toURL());
 

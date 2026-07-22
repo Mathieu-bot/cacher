@@ -29,13 +29,12 @@ public class CacheService {
   public URL getWithCache(URL url) {
     var bucketKey = SHA256.apply(url.toString());
     try {
-      var cachedFile = bucketComponent.download(bucketKey);
-      log.info("isCachedFile null: " + (cachedFile == null)); // TODO: clean
+      return bucketComponent.presign(bucketKey, DOWNLOAD_DURATION);
     } catch (Exception e) {
       var downloadedFromSource = downloadWithGet(url);
       bucketComponent.upload(downloadedFromSource, bucketKey);
+      return bucketComponent.presign(bucketKey, DOWNLOAD_DURATION);
     }
-    return bucketComponent.presign(bucketKey, DOWNLOAD_DURATION);
   }
 
   @SneakyThrows
